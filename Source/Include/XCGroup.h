@@ -101,6 +101,12 @@
 - (BOOL)isEmpty;
 
 #pragma mark Adding children
+
+- (void)addEmbeddedFramework:(XCFrameworkDefinition *)framework toTargets:(NSArray<XCTarget *> *)targets;
+- (void)addEmbeddedSourceFile:(XCSourceFile *)sourceFile toTargets:(NSArray *)targets;
+
+
+
 /**
  * Adds a class to the _group, as specified by the ClassDefinition. If the _group already contains a class by the same
  * name, the contents will be updated.

@@ -52,6 +52,9 @@
 - (id)initWithProject:(XCProject*)project key:(NSString*)key name:(NSString*)name productName:(NSString*)productName
     productReference:(NSString*)productReference productType:(NSString*)productType;
 
+- (void)addEmbedded:(XCSourceFile*)member;
+
+
 - (NSArray<XCSourceFile*>*)resources;
 
 - (NSArray<id<XCBuildFile>>*)members;

@@ -48,6 +48,9 @@
 - (id)initWithProject:(XCProject *)project key:(NSString *)key type:(XcodeSourceFileType)type name:(NSString *)name
            sourceTree:(NSString *)tree path:(NSString *)path;
 
+- (void)becomeEmbedded;
+- (NSString *)embeddedKey;
+
 /**
  * If yes, indicates the file is able to be included for compilation in an `XCTarget`.
  */

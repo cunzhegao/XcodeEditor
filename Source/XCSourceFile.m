@@ -59,6 +59,54 @@
 #pragma mark - Interface Methods
 //-------------------------------------------------------------------------------------------
 
+NSString *_embeddedKey;
+
+- (void)becomeEmbedded
+{
+    if (_type == Framework) {
+        NSMutableDictionary *sourceBuildFile = [NSMutableDictionary dictionary];
+        sourceBuildFile[@"isa"] = [NSString xce_stringFromMemberType:PBXBuildFileType];
+        sourceBuildFile[@"fileRef"] = _key;
+        
+        NSDictionary *dict = [NSDictionary dictionaryWithObject:@[@"CodeSignOnCopy",@"RemoveHeadersOnCopy"] forKey:@"ATTRIBUTES"];
+        
+        sourceBuildFile[@"settings"] = dict;
+        
+        NSString *buildFileKey = [[XCKeyBuilder forItemNamed:[_name stringByAppendingString:@".embedded"]] build];
+        [_project objects][buildFileKey] = sourceBuildFile;
+    }
+}
+
+- (NSString *)embeddedKey
+{
+    if (_embeddedKey == nil) {
+        [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
+            if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+                
+                if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
+                    
+                    if ([[obj valueForKey:@"settings"] allKeys].count > 0) {
+                        NSDictionary *settings = [obj valueForKey:@"settings"];
+                        
+                        [settings enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull settingKey, id  _Nonnull settingobj, BOOL * _Nonnull settingStop) {
+                            
+                            if (([settingobj containsObject:@"CodeSignOnCopy"] && [settingobj containsObject:@"RemoveHeadersOnCopy"])) {
+                                
+                                _embeddedKey = [key copy];
+                                
+                                NSLog(@"there is a embedded framework");
+                            }
+                        }];
+                    }
+                }
+            }
+        }];
+    }
+    return [_embeddedKey copy];
+}
+
+
+
 // Goes to the entry for this object in the project and sets a value for one of the keys, such as name, path, etc.
 - (void)setValue:(id)val forProjectItemPropertyWithKey:(NSString *)key
 {
@@ -142,13 +190,26 @@
         [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
             if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
                 if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
-                    _buildFileKey = [key copy];
+                    
+                    if ([[obj valueForKey:@"settings"] allKeys].count > 0) {
+                        NSDictionary *settings = [obj valueForKey:@"settings"];
+                        
+                        [settings enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull settingKey, id  _Nonnull settingobj, BOOL * _Nonnull settingStop) {
+                            
+                            if (!([settingobj containsObject:@"CodeSignOnCopy"] && [settingobj containsObject:@"RemoveHeadersOnCopy"])) {
+                                
+                                _buildFileKey = [key copy];
+                            }
+                            
+                        }];
+                    }else{
+                        _buildFileKey = [key copy];
+                    }
                 }
             }
         }];
     }
     return [_buildFileKey copy];
-    
 }
 
 

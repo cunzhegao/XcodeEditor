@@ -477,6 +477,25 @@
 }
 
 //-------------------------------------------------------------------------------------------
+#pragma mark Add Embedded Frameworks
+
+- (void)addEmbeddedFramework:(XCFrameworkDefinition *)framework toTargets:(NSArray<XCTarget *> *)targets
+{
+    [self addFramework:framework];
+    XCSourceFile *embedded = (XCSourceFile *) [self memberWithDisplayName:[framework fileName]];
+    [self addEmbeddedSourceFile:embedded toTargets:targets];
+}
+
+- (void)addEmbeddedSourceFile:(XCSourceFile *)sourceFile toTargets:(NSArray *)targets
+{
+    for (XCTarget *target in targets) {
+        [target addMember:sourceFile];
+        [target addEmbedded:sourceFile];
+    }
+}
+
+
+//-------------------------------------------------------------------------------------------
 #pragma mark Members
 
 - (NSArray<id <XcodeGroupMember>> *)members

@@ -54,6 +54,59 @@
 /* ====================================================================================================================================== */
 #pragma mark - Interface Methods
 
+
+- (void)addEmbedded:(XCSourceFile*)member
+{
+    [member becomeEmbedded];
+    
+    NSMutableDictionary* target = [NSMutableDictionary dictionaryWithDictionary:[[_project objects] objectForKey:_key]];
+    
+    BOOL hasEmbeddedConfiguration = NO;
+    
+    for (NSString* buildPhaseKey in [target objectForKey:@"buildPhases"])
+    {
+        NSMutableDictionary* buildPhase = [[_project objects] objectForKey:buildPhaseKey];
+        if ([[buildPhase valueForKey:@"isa"] xce_asMemberType] == PBXCopyFilesBuildPhaseType) //targer have already use embedded
+        {
+            
+            NSMutableArray* files = [buildPhase objectForKey:@"files"];
+            if (![files containsObject:[member embeddedKey]])
+            {
+                [files addObject:[member embeddedKey]];
+            }
+            
+            [buildPhase setObject:files forKey:@"files"];
+            
+            hasEmbeddedConfiguration = YES;
+        }
+    }
+    
+    if (!hasEmbeddedConfiguration) { // target never use embedded before
+        NSMutableDictionary *embeddedConfig = [NSMutableDictionary dictionary];
+        [embeddedConfig setObject:@"PBXCopyFilesBuildPhase" forKey:@"isa"];
+        [embeddedConfig setObject:@"2147483647" forKey:@"buildActionMask"];
+        [embeddedConfig setObject:@"" forKey:@"dstPath"];
+        [embeddedConfig setObject:@"10" forKey:@"dstSubfolderSpec"];
+        [embeddedConfig setObject:@"Embed Frameworks" forKey:@"name"];
+        [embeddedConfig setObject:@"0" forKey:@"runOnlyForDeploymentPostprocessing"];
+        [embeddedConfig setObject:@[[member embeddedKey]] forKey:@"files"];
+        
+        NSString *embeddedKey = [[XCKeyBuilder forItemNamed:[_name stringByAppendingString:@".EmbedFrameworks"]] build];
+        
+        NSMutableArray *buildPhases = [NSMutableArray arrayWithArray:[target objectForKey:@"buildPhases"]];
+        [buildPhases addObject:embeddedKey];
+        
+        [target setObject:buildPhases forKey:@"buildPhases"];
+        
+        [[_project objects] setObject:target forKey:_key];
+        
+        [[_project objects] setObject:embeddedConfig forKey:embeddedKey];
+    }
+    [self flagMembersAsDirty];
+}
+
+
+
 - (NSArray*)resources
 {
     if (_resources == nil)
